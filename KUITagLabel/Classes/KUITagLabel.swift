@@ -157,6 +157,13 @@ open class KUITagLabel: UILabel {
         attributedText = attr
     }
     
+    open func addGesture(){
+        let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTap(_:)))
+        singleTap.numberOfTapsRequired = 1
+        singleTap.numberOfTouchesRequired = 1
+        addGestureRecognizer(singleTap)
+    }
+    
     // MARK: - Private
     fileprivate func setup() {
         backgroundColor = UIColor.clear
@@ -165,10 +172,10 @@ open class KUITagLabel: UILabel {
         lineBreakMode = .byWordWrapping
         textAlignment = .left
         
-        let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTap(_:)))
-        singleTap.numberOfTapsRequired = 1
-        singleTap.numberOfTouchesRequired = 1
-        addGestureRecognizer(singleTap)
+        //        let singleTap = UITapGestureRecognizer(target: self, action: #selector(singleTap(_:)))
+        //        singleTap.numberOfTapsRequired = 1
+        //        singleTap.numberOfTouchesRequired = 1
+        //        addGestureRecognizer(singleTap)
     }
     
     fileprivate func refreshIfNeeded() {
@@ -264,6 +271,40 @@ open class KUITagLabel: UILabel {
             return
         }
         
-        onSelectedHandler?(tags[characterIndex])
+        //        onSelectedHandler?(tags[characterIndex])
+        print(tags[characterIndex].title)
+        
     }
 }
+extension UITapGestureRecognizer {
+    
+    func didTapAttributedTextInLabel(label: UILabel, inRange targetRange: NSRange) -> Bool {
+        // Create instances of NSLayoutManager, NSTextContainer and NSTextStorage
+        let layoutManager = NSLayoutManager()
+        let textContainer = NSTextContainer(size: CGSize.zero)
+        let textStorage = NSTextStorage(attributedString: label.attributedText!)
+        
+        // Configure layoutManager and textStorage
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
+        
+        // Configure textContainer
+        textContainer.lineFragmentPadding = 0.0
+        textContainer.lineBreakMode = label.lineBreakMode
+        textContainer.maximumNumberOfLines = label.numberOfLines
+        let labelSize = label.bounds.size
+        textContainer.size = labelSize
+        
+        // Find the tapped character location and compare it to the specified range
+        let locationOfTouchInLabel = self.location(in: label)
+        let textBoundingBox = layoutManager.usedRect(for: textContainer)
+        
+        let textContainerOffset = CGPoint(x: (labelSize.width - textBoundingBox.size.width) * 0.5 - textBoundingBox.origin.x, y: (labelSize.height - textBoundingBox.size.height) * 0.5 - textBoundingBox.origin.y)
+        
+        let locationOfTouchInTextContainer = CGPoint(x: locationOfTouchInLabel.x - textContainerOffset.x, y: locationOfTouchInLabel.y - textContainerOffset.y)
+        let indexOfCharacter = layoutManager.characterIndex(for: locationOfTouchInTextContainer, in: textContainer, fractionOfDistanceBetweenInsertionPoints: nil)
+        return NSLocationInRange(indexOfCharacter, targetRange)
+    }
+    
+}
+
